@@ -1504,16 +1504,16 @@ static void show_hiscores(uint8_t row) {
          * (o "N. ----" si no hay entrada). */
         uint8_t line_row = (uint8_t)(row + 2 + i * 2);
         uint8_t c = (uint8_t)((VC_SCREEN_COLS - 6) >> 1);   /* /2 = shift */
-        char pfx[3];
+        char pfx[4];                 /* "N. " + terminador nulo */
         pfx[0] = (char)('1' + i);
         pfx[1] = '.';
         pfx[2] = ' ';
+        pfx[3] = 0;
         put_str_at(c, line_row, pfx);
         if (i < hiscore_n) {
             txt_put_u16_4((uint8_t)(c + 3), line_row, hiscores[i]);
         } else {
-            static const char dashes[5] = { '-', '-', '-', '-', 0 };
-            put_str_at((uint8_t)(c + 3), line_row, dashes);
+            put_str_at((uint8_t)(c + 3), line_row, "----");
         }
     }
 }
