@@ -1680,6 +1680,11 @@ static uint8_t play_game(void) {
         }
     }
 
+    /* Al terminar la partida (game over o 'q') hay que cortar el UFO: si venia
+     * cruzando, su zumbido (voz 3) quedaria sonando para siempre, porque el
+     * bucle del juego ya no llama a snd_update(). */
+    snd_ufo_stop();
+
     /* Anota la puntuacion en la tabla de mejores (si supera a alguna). */
     hiscore_add(score);
 
