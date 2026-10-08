@@ -238,6 +238,7 @@ SpaceInvaders/
 │   ├── VIDEO-LIB.md            manual de la biblioteca
 │   ├── MAPA-MEMORIA.md         mapa de memoria detallado
 │   ├── JOYSTICK-INTEGRACION.md mini-manual del joystick
+│   ├── TIPS-Y-TRAMPA.md        trampas y lecciones para el proximo juego
 │   └── text.s.md               diseño del módulo de texto ASM
 ├── lib/
 │   └── vc.lib          copia de la biblioteca
