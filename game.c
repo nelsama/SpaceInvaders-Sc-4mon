@@ -190,8 +190,8 @@ static const uint8_t ebullet_p0[8] = { 0x00,0x18,0x18,0x18,0x18,0x3C,0x00,0x00 }
 static const uint8_t ebullet_p1[8] = { 0x00,0x18,0x18,0x18,0x18,0x3C,0x00,0x00 };
 
 /* Explosion: estrella/racimo que se ensancha. Color 3 (naranja en paleta GREEN). */
-static const uint8_t explode_p0[8] = { 0x42,0x24,0x18,0xFF,0xFF,0x18,0x24,0x42 };
-static const uint8_t explode_p1[8] = { 0x42,0x24,0x18,0xFF,0xFF,0x18,0x24,0x42 };
+static const uint8_t explode_p0[8] = { 0x91,0x42,0x24,0x19,0x98,0x24,0x42,0x89 };
+static const uint8_t explode_p1[8] = { 0x91,0x42,0x24,0x19,0x98,0x24,0x42,0x89 };
 
 /* UFO (nave nodriza): mitad IZQUIERDA del platillo (16x8 en total, con 2
  * sprites lado a lado). El lado derecho se dibuja con el MISMO patron y
@@ -302,6 +302,7 @@ static const uint8_t ufo_p1[8] = { 0x00,0x07,0x7F,0xFF,0xBB,0xFF,0x71,0x20 };
 #define SHIP_LIVES    3     /* vidas iniciales */
 #define RESPAWN_BLINK 90    /* frames de invulnerabilidad/parpadeo tras revivir */
 #define DEATH_PAUSE   120   /* frames de PAUSA tras morir (~2 s) antes de revivir */
+#define FIRE_COOLDOWN 30    /* frames minimos entre disparos (~0.5 s) */
 
 /* ===========================================================================
  * ESTADO
@@ -362,6 +363,7 @@ static uint8_t  ufo_div;      /* divisor: cuenta 8 frames por unidad de ufo_wait
 static uint16_t score;
 static uint8_t  lives;
 static uint8_t  blink;             /* >0: nave parpadeando/invulnerable */
+static uint8_t  fire_cooldown;     /* >0: frames que faltan para poder disparar */
 static uint8_t  death_pause;       /* >0: pausa tras morir (sin nave ni accion) */
 static uint8_t  game_over;         /* 1 = fin de partida */
 
@@ -394,6 +396,8 @@ static uint8_t rng_next(void) {
 static uint8_t fire_bullet(void) {
     uint8_t i;
 
+    if (fire_cooldown) return 0;         /* espera entre disparos */
+
     for (i = 0; i < NBULLETS; i++) {
         if (b_alive[i]) return 0;        /* ya hay una bala en vuelo */
     }
@@ -404,6 +408,7 @@ static uint8_t fire_bullet(void) {
         b_x[i]     = (uint16_t)(ship_x + (SHIP_W / 2) - (BULLET_W / 2));
         b_y[i]     = (uint8_t)(SHIP_Y - BULLET_H);
         b_alive[i] = 1;
+        fire_cooldown = FIRE_COOLDOWN;   /* no permitir otra hasta pasar N frames */
         vc_sprite_move((uint8_t)(SPR_BULLET0 + i), b_x[i], b_y[i], VC_SPPAL_1);
         vc_oam_put((uint8_t)(SPR_BULLET0 + i), VC_OAM_TILE, SPR_PAT_BULLET);
         snd_shoot();
@@ -421,8 +426,9 @@ static void read_input(void) {
     if (j & JOY_A_LEFT)  move = -SHIP_SPEED;
     if (j & JOY_A_RIGHT) move =  SHIP_SPEED;
 
-    /* Disparo: AUTO si el boton esta pulsado. Como solo hay 1 bala a la vez,
-     * al morir la bala anterior sale otra mientras se mantenga el boton. */
+    /* Disparo: AUTO si el boton esta pulsado, pero con un pequeno retardo
+     * (fire_cooldown) para que no salga una rafaga al morir la bala anterior
+     * (p.ej. al impactar los propios escudos). */
     if (j & JOY_A_FIRE) fire_bullet();
 
     /* --- UART (teclado del terminal), ademas del joystick --- */
@@ -1388,6 +1394,7 @@ static void setup_bullets(void) {
     score           = 0;
     lives           = SHIP_LIVES;
     blink           = 0;
+    fire_cooldown   = 0;
     death_pause     = 0;
     game_over       = 0;
     enemy_fire_tick = ENEMY_FIRE_MIN;
@@ -1645,6 +1652,7 @@ static uint8_t play_game(void) {
             update_ship_blink();
             update_explosions();
             update_ufo();
+            if (fire_cooldown) fire_cooldown--;
             snd_update();      /* gestiona las notas percutivas del SID */
 
             /* La flota da un paso cada fleet_step_delay() frames. El retardo
@@ -1793,9 +1801,10 @@ int main(void) {
         }
     }
 
-    /* Salida limpia al monitor. */
+    /* Salida limpia al monitor: limpiar la pantalla y apagar el video. */
     snd_silence();
     vc_wait_vblank();
+    clear_screen();           /* borra el tilemap visible (fondo negro) */
     vc_clear_oam();
     vc_set_scroll_x(0);
     vc_set_scroll_y(0);
