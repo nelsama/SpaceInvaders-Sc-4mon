@@ -28,12 +28,6 @@ R 0800
 > (`D:/cc65`). Compila desde **Git Bash / cmd** (`CC65_HOME=D:/cc65`), no desde
 > WSL (WSL no puede lanzar los `.exe`).
 
-También hay un binario de **diagnóstico** (no forma parte del juego):
-
-```
-make ramtest CC65_HOME=D:/cc65     # prueba el rango de RAM por UART
-```
-
 ---
 
 ## Mapa de memoria (hardware real)
@@ -239,8 +233,7 @@ SpaceInvaders/
 │   ├── sound.h         API del driver SID
 │   └── joy.h           API del joystick
 ├── config/
-│   ├── programa.cfg    config del linker (juego)
-│   └── ramtest.cfg     config del linker (test de RAM)
+│   └── programa.cfg    config del linker (juego)
 ├── doc/
 │   ├── VIDEO-LIB.md            manual de la biblioteca
 │   ├── MAPA-MEMORIA.md         mapa de memoria detallado
@@ -251,8 +244,7 @@ SpaceInvaders/
 ├── build/              objetos
 └── output/
     ├── game.bin        binario final
-    ├── game.map        mapa de memoria
-    └── ramtest.bin     binario de diagnóstico (test de RAM)
+    └── game.map        mapa de memoria
 ```
 
 ### Actualizar la biblioteca

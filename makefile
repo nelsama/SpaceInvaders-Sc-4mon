@@ -93,12 +93,6 @@ info:
 		echo "Error: juego no compilado"; \
 	fi
 
-# Binario de diagnostico: prueba si $3E00-$3FFF es RAM real (no toca el juego).
-ramtest: dirs
-	$(CA65) $(ASFLAGS) -o $(BUILD_DIR)/ramtest.o ramtest.s
-	$(LD) -C config/ramtest.cfg -m $(OUTPUT_DIR)/ramtest.map -o $(OUTPUT_DIR)/ramtest.bin $(BUILD_DIR)/ramtest.o
-	@echo "Test generado: $(OUTPUT_DIR)/ramtest.bin (load 0800, R 0800). Resultado por UART."
-
 map:
 	@if [ -f $(MAP_FILE) ]; then cat $(MAP_FILE); else echo "Error: mapa no encontrado"; fi
 
