@@ -23,6 +23,7 @@
         .export _txt_put_u8_1
         .export _txt_put_u16_4
         .export _txt_clear_at
+        .export _txt_set_spr_white
 
         .import popa, popax
         .importzp ptr
@@ -31,6 +32,9 @@
 VID_ADDR_LO     = $D800
 VID_ADDR_HI     = $D801
 VID_DATA        = $D802
+VID_PAL_PTR     = $D813
+VID_PAL_LO      = $D814
+VID_PAL_HI      = $D815
 AREA_TILEMAP    = $00
 AREA_ATTR       = $40
 
@@ -294,4 +298,24 @@ put_digit:
         sta txt_tile
         jsr put_tile
         inc txt_col
+        rts
+
+; ----------------------------------------------------------------------------
+; txt_set_spr_white: fija el COLOR 3 = BLANCO ($FFF) en la PALETA DE SPRITE 1,
+;   que es la que usa TODO sprite del juego (balas, nave, explosion y UFO).
+;
+;   POR QUE: las paletas son estado GLOBAL del core y NO se resetean al cargar
+;   un programa. Si el juego anterior (launcher) las reprogramo, nuestros
+;   sprites heredanian su color (p.ej. amarillo). Hay que fijarlo explicitamente.
+;
+;   Entrada = 16 + paleta*4 + color = 16 + 1*4 + 3 = 23.
+;   Escribir $D815 aplica el color. Llamar DENTRO del VBLANK.
+; ----------------------------------------------------------------------------
+_txt_set_spr_white:
+        lda #23                ; entrada 23 = sprite pal 1, color 3
+        sta VID_PAL_PTR
+        lda #$FF
+        sta VID_PAL_LO
+        lda #$0F
+        sta VID_PAL_HI         ; color $FFF (blanco)
         rts

@@ -33,6 +33,7 @@ extern void txt_put_at(uint8_t col, uint8_t row, const char *s);
 extern void txt_clear_at(uint8_t col, uint8_t row, uint8_t len);
 extern void txt_put_u8_1(uint8_t col, uint8_t row, uint8_t valor);
 extern void txt_put_u16_4(uint8_t col, uint8_t row, uint16_t valor);
+extern void txt_set_spr_white(void);
 
 /* Aritmetica sin division de hardware (math.s): por restas. Se usan en vez de
  * / y % para que cc65 no arrastre div.o/udiv.o/umod.o. */
@@ -453,7 +454,7 @@ static void read_input(void) {
         if (nx < SHIP_MIN_X) { nx = SHIP_MIN_X; }
         if (nx > SHIP_MAX_X) { nx = SHIP_MAX_X; }
         ship_x = (uint16_t)nx;
-        vc_sprite_move(SPR_SHIP, ship_x, SHIP_Y, VC_SPPAL_3 | VC_SPR_SCALE2X);
+        vc_sprite_move(SPR_SHIP, ship_x, SHIP_Y, VC_SPPAL_1 | VC_SPR_SCALE2X);
         vc_oam_put(SPR_SHIP, VC_OAM_TILE, SPR_SHIP);
     }
 }
@@ -871,10 +872,10 @@ static void update_explosions(void) {
             vc_sprite_disable(slot);
         } else if (x_big[i]) {
             /* Explosion de la nave: 2x (16x16), centrada en su posicion. */
-            vc_sprite_move(slot, x_x[i], x_y[i], VC_SPPAL_3 | VC_SPR_SCALE2X);
+            vc_sprite_move(slot, x_x[i], x_y[i], VC_SPPAL_1 | VC_SPR_SCALE2X);
             vc_oam_put(slot, VC_OAM_TILE, SPR_PAT_EXPLODE);
         } else {
-            vc_sprite_move(slot, x_x[i], x_y[i], VC_SPPAL_3);
+            vc_sprite_move(slot, x_x[i], x_y[i], VC_SPPAL_1);
             vc_oam_put(slot, VC_OAM_TILE, SPR_PAT_EXPLODE);
         }
     }
@@ -890,8 +891,8 @@ static void update_explosions(void) {
 
 /* Dibuja (o mueve) los 2 sprites del UFO en su X actual. */
 static void ufo_draw(void) {
-    uint8_t flags_l = VC_SPPAL_3;
-    uint8_t flags_r = (uint8_t)(VC_SPPAL_3 | VC_SPR_FLIP_X);
+    uint8_t flags_l = VC_SPPAL_1;
+    uint8_t flags_r = (uint8_t)(VC_SPPAL_1 | VC_SPR_FLIP_X);
 
     vc_sprite_move(SPR_UFO, ufo_x, UFO_Y, flags_l);
     vc_oam_put(SPR_UFO, VC_OAM_TILE, SPR_PAT_UFO);
@@ -1130,7 +1131,7 @@ static uint8_t enemy_fire(void) {
             e_y[i]     = (uint8_t)((row + 1) * 8);
             e_alive[i] = 1;
             vc_sprite_move((uint8_t)(SPR_EBULLET0 + i), e_x[i], e_y[i],
-                           VC_SPPAL_2);
+                           VC_SPPAL_1);
             vc_oam_put((uint8_t)(SPR_EBULLET0 + i), VC_OAM_TILE, SPR_PAT_EBULLET);
             return 1;
         }
@@ -1184,7 +1185,7 @@ static void update_enemy_bullets(void) {
             }
         }
 
-        vc_sprite_move(slot, e_x[i], e_y[i], VC_SPPAL_2);
+        vc_sprite_move(slot, e_x[i], e_y[i], VC_SPPAL_1);
         vc_oam_put(slot, VC_OAM_TILE, SPR_PAT_EBULLET);
     }
 }
@@ -1263,6 +1264,13 @@ static void setup_video(void) {
      * negro se funden con el fondo en vez de verse verdes. */
     vc_pal_set_bg(2, 1, VC_RGB444(0x0, 0x0, 0x0));   /* color 1 = negro  */
     vc_pal_set_bg(2, 3, VC_RGB444(0x0, 0xA, 0x0));   /* color 3 = verde  */
+
+    /* Paleta de SPRITE 1: el juego usa su COLOR 3 (blanco) para TODOS sus
+     * sprites (balas, nave, explosion, UFO). Hay que fijarlo EXPLICITAMENTE:
+     * las paletas son estado global del core y NO se resetean al cargar un
+     * programa, asi que si el juego anterior (launcher) las reprogramo,
+     * heredariamos su color (p.ej. amarillo). ASM compacto (text.s). */
+    txt_set_spr_white();
 
     /* --- Carga de patrones por tabla (compacto en vez de 20 llamadas) ---
      * Cada entrada: { destino (tile o patron), plano0, plano1 }.
@@ -1344,7 +1352,7 @@ static void setup_ship(void) {
     s.x_lo  = (uint8_t)ship_x;
     s.y     = (uint8_t)SHIP_Y;
     s.tile  = SPR_SHIP;
-    s.flags = VC_SPPAL_3 | VC_SPR_SCALE2X;
+    s.flags = VC_SPPAL_1 | VC_SPR_SCALE2X;
     s.coll  = VC_COLL_CENTER;
     vc_sprite_set(SPR_SHIP, &s);
 }
@@ -1533,7 +1541,7 @@ static void update_ship_blink(void) {
         if (blink & 4) {
             vc_sprite_disable(SPR_SHIP);
         } else {
-            vc_sprite_move(SPR_SHIP, ship_x, SHIP_Y, VC_SPPAL_3 | VC_SPR_SCALE2X);
+            vc_sprite_move(SPR_SHIP, ship_x, SHIP_Y, VC_SPPAL_1 | VC_SPR_SCALE2X);
             vc_oam_put(SPR_SHIP, VC_OAM_TILE, SPR_SHIP);
         }
     }
