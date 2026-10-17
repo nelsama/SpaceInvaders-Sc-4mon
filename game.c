@@ -1342,7 +1342,6 @@ static void setup_video(void) {
     vc_set_band2_scroll(0, 0);
     vc_set_band3_scroll(0, 0);
 
-    put_str_center(1, "SPACE INVADERS");
     put_str_at(1, 28, "a/d mover SPACE dispara q salir");
 }
 
